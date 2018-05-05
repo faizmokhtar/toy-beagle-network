@@ -10,16 +10,48 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    @IBOutlet weak var tableView: UITableView!
+
+    var breeds = [String: [String]]()
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+
+        tableView.delegate = self
+        tableView.dataSource = self
+
+        let networkService = NetworkService(withBaseURL: "https://dog.ceo/api/")
+        networkService.fetch(fromRoute: Routes.allBreeds) { result in
+            switch result {
+            case .success(let model):
+                print(model.message)
+                self.breeds = model.message
+                self.tableView.reloadData()
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+        }
+    }
+}
+
+extension ViewController: UITableViewDataSource {
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 1
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return self.breeds.count
     }
 
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as UITableViewCell
+        let key = Array(self.breeds.keys)[indexPath.row]
+        cell.textLabel?.text = key
+        return cell
+    }
+}
+
+extension ViewController: UITableViewDelegate {
 
 }
 
